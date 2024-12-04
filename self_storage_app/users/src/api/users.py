@@ -10,7 +10,7 @@ dynamodb = boto3.resource('dynamodb')
 ddbTable = dynamodb.Table(USERS_TABLE)
 
 
-def handler(event, context):
+def lambda_handler(event, context):
     route_key = f"{event['httpMethod']} {event['resource']}"
 
 

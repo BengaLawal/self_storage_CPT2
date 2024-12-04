@@ -34,7 +34,7 @@ Resources:
     Properties:
       Description: Handler for all users related operations
       CodeUri: src/api
-      Handler: users.handler
+      Handler: users.lambda_handler
       Environment:
         Variables:
           USERS_TABLE: !Ref UsersTable
@@ -97,6 +97,14 @@ Resources:
             Identity:
               Headers:
                 - Authorization
+      AccessLogSetting:  #enable API Gateway access and execution logging
+        DestinationArn: !GetAtt AccessLogs.Arn
+        Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
+      MethodSettings:
+      - ResourcePath: "/*"
+        LoggingLevel: INFO
+        HttpMethod: "*"
+        DataTraceEnabled: True
 
   UserPool:
     Type: AWS::Cognito::UserPool
@@ -172,6 +180,123 @@ Resources:
       Tags:
         Stack: !Sub ${AWS::StackName}
 
+#  existing API Gateway logging permissions are set so the service can send logs to CloudWatch
+  ApiLoggingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+  ApiGatewayAccountLoggingSettings:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiLoggingRole.Arn
+
+  # API Gateway access logs entries are set to stream in to CloudWatch logs
+  AccessLogs:
+    Type: AWS::Logs::LogGroup
+    DependsOn: ApiLoggingRole
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/${AWS::StackName}/APIAccessLogs"
+
+  # topic that the components will use to send notifications for triggered alarms
+  AlarmsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Tags:
+        - Key: "Stack"
+          Value: !Sub "${AWS::StackName}"
+
+  RestAPIErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Ref AlarmsTopic
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: ApiName
+          Value: !Ref RestAPI
+      EvaluationPeriods: 1
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Period: 60
+      Statistic: Sum
+      Threshold: 1.0
+
+  AuthorizerFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Ref AlarmsTopic
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AuthorizerFunction
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1.0
+
+    AuthorizerFunctionThrottlingAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmActions:
+          - !Ref AlarmsTopic
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: !Ref AuthorizerFunction
+        EvaluationPeriods: 1
+        MetricName: Throttles
+        Namespace: AWS/Lambda
+        Period: 60
+        Statistic: Sum
+        Threshold: 1.0
+
+    UsersFunctionErrorsAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmActions:
+          - !Ref AlarmsTopic
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: !Ref UsersFunction
+        EvaluationPeriods: 1
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Period: 60
+        Statistic: Sum
+        Threshold: 1.0
+
+    UsersFunctionThrottlingAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmActions:
+          - !Ref AlarmsTopic
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: !Ref UsersFunction
+        EvaluationPeriods: 1
+        MetricName: Throttles
+        Namespace: AWS/Lambda
+        Period: 60
+        Statistic: Sum
+        Threshold: 1.0
+
 Outputs:
   UsersTable:
     Description: DynamoDB Users table
@@ -200,3 +325,6 @@ Outputs:
       --client-id ${UserPoolClient} --auth-parameters
       USERNAME=<user@example.com>,PASSWORD=<password> --query
       "AuthenticationResult.IdToken" --output text
+  AlarmsTopic:
+    Description: "SNS Topic to be used for the alarms subscriptions"
+    Value: !Ref AlarmsTopic
