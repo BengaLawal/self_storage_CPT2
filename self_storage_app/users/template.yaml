@@ -20,11 +20,11 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: userId
+        - AttributeName: userid
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
-        - AttributeName: userId
+        - AttributeName: userid
           KeyType: HASH
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
@@ -33,7 +33,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: Handler for all users related operations
-      CodeUri: src/Function
+      CodeUri: src/api
       Handler: users.handler
       Environment:
         Variables:
@@ -161,7 +161,7 @@ Resources:
   AuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/Function
+      CodeUri: src/api
       Handler: authorizer.lambda_handler
       Description: Handler for Lambda authorizer
       Environment:
@@ -200,4 +200,3 @@ Outputs:
       --client-id ${UserPoolClient} --auth-parameters
       USERNAME=<user@example.com>,PASSWORD=<password> --query
       "AuthenticationResult.IdToken" --output text
-    # aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --client-id 3eo8oia9etueaa1e1svmp75gji --auth-parameters USERNAME=olawal023@student.wethinkcode.co.za,PASSWORD=@Bj12345 --query "AuthenticationResult.IdToken" --output text
