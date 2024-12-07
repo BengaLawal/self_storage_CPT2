@@ -1,17 +1,39 @@
-import AuthModal from './AuthModal'; // Update the import
+import { useNavigate } from 'react-router-dom';
+import AuthModal from './AuthModal';
+import React from "react"; // Update the import
 
-export default function Nav() {
+// eslint-disable-next-line react/prop-types
+export default function Nav({isHome = false, handleLogout = null}) {
+    const navigate = useNavigate();
+
     return (
-        <nav className="flex justify-between items-center p-4 text-white">
-            <div className="text-2xl font-bold">Self Storage</div>
+        <nav className="flex justify-between items-center p-6 px-24 text-white">
+            <div
+                className="text-2xl font-bold cursor-pointer"
+                onClick={() => navigate('/')} // Navigate to home on click
+            >
+                Self Storage
+            </div>
 
             <div className="flex items-center space-x-4">
-                <a href="#" className="hover:text-gray-300">Home</a>
+                <button
+                    onClick={() => navigate('/')}
+                    className="hover:text-gray-300 border-0 hover:border-0"
+                >
+                    Home
+                </button>
+                {isHome && <AuthModal/>}
+                {!isHome && <button
+                    onClick={handleLogout}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+                >
+                    Sign Out
+                </button>
+                }
 
-                <AuthModal />
 
                 {/* You can remove the separate signup button since it's now in the modal */}
-            </div>
-        </nav>
-    );
-};
+                    </div>
+                    </nav>
+                    );
+                };

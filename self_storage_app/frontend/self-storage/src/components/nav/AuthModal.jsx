@@ -1,18 +1,21 @@
-import React, { useState, useCallback } from 'react';
+// eslint-disable-next-line no-unused-vars
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
+import HandleAuthStateChange from '@/api/handleAuthStateChange.jsx';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
+import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 
 // Import from AWS Amplify v6
 import { Amplify } from 'aws-amplify';
+
 import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
 
 // Import React Router for navigation
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 // Import your AWS configuration
-import { awsExports } from '../../aws-exports';
+import { awsExports } from '@/aws-exports.js';
 
 // Amplify configuration
 Amplify.configure({
@@ -41,26 +44,28 @@ cognitoUserPoolsTokenProvider.setAuthConfig({
     }
 });
 
+
+
 // Separate component to handle authentication
-function AuthHandler() {
-    const { user } = useAuthenticator((context) => [context.user]);
-    const navigate = useNavigate();
-
-    React.useEffect(() => {
-        try {
-            if (user) {
-                navigate('/client', {
-                    state: { user: { id: user.userId } }
-                });
-            }
-        } catch (error) {
-            console.error("Navigation error:", error);
-            // Optionally add fallback navigation or error handling
-        }
-    }, [user, navigate]);
-
-    return null;
-}
+// function AuthHandler() {
+//     const { user } = useAuthenticator((context) => [context.user]);
+//     const navigate = useNavigate();
+//
+//     React.useEffect(() => {
+//         try {
+//             if (user) {
+//                 navigate('/client', {
+//                     state: { user: { id: user.userId } }
+//                 });
+//             }
+//         } catch (error) {
+//             console.error("Navigation error:", error);
+//             // Optionally add fallback navigation or error handling
+//         }
+//     }, [user, navigate]);
+//
+//     return null;
+// }
 
 export default function AuthModal() {
     const [isOpen, setIsOpen] = useState(false);
@@ -122,7 +127,8 @@ export default function AuthModal() {
                         },
                     }}
                 >
-                    {() => <AuthHandler />}
+                    {/*{() => <AuthHandler />}*/}
+                    {() =>  <HandleAuthStateChange />}
                 </Authenticator>
             </DialogContent>
         </Dialog>

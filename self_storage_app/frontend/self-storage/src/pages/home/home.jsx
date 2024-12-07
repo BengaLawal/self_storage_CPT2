@@ -1,12 +1,13 @@
+// eslint-disable-next-line no-unused-vars
 import React from 'react';
 
 import { Button } from "@/components/ui/button";
-import Nav from '../../components/nav/nav';
+import Nav from '@/components/nav/nav';
 
 export default function Home() {
     return (
         <div className="min-h-screen  text-white">
-            <Nav />
+            <Nav isHome={true}/>
             <main className="container mx-auto px-4 py-16 text-center">
                 <h1 className="text-5xl font-bold mb-6">
                     Secure Your Belongings,
@@ -16,7 +17,7 @@ export default function Home() {
 
                 <p className="text-xl mb-10 max-w-2xl mx-auto text-gray-300">
                     Find the perfect storage solution for your needs.
-                    From personal items to business inventory, we've got you covered.
+                    From personal items to business inventory, we&#39;ve got you covered.
                 </p>
 
                 <div className="space-x-4">

@@ -1,13 +1,16 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from 'aws-amplify/auth';
+import Nav from "@/components/nav/nav.jsx";
 
 export default function ClientPage() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    // Extract user from location state
+    // Safely extract user data from location state
     const { user } = location.state || {};
+    const { id, username, signInDetails } = user || {};
 
     useEffect(() => {
         // If no user is found, redirect to home
@@ -30,19 +33,14 @@ export default function ClientPage() {
         return null;
     }
 
-    return (
-        <div className="min-h-screen bg-gray-100 p-6">
-            <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-8">
-                <h1 className="text-2xl font-bold mb-4">Welcome to Your Dashboard</h1>
-                <h3 className="text-xl mb-6">Hello, {user.username}</h3>
+    return (<>
+        <div className="min-h-dvh w-dvw text-black bg-gray-100 absolute top-0 left-0">
+            <Nav handleLogout={handleSignOut}/>
+            <div className="w-4/5 mx-auto bg-transparent p-2 mt-2">
+                <h4 className="text-xl font-medium mb-4 text-amber-400">Hello, <span className={"italic"}>{user.signInDetails.loginId.split("@")[0]}</span>, you are a client.</h4>
 
-                <button
-                    onClick={handleSignOut}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
-                >
-                    Sign Out
-                </button>
             </div>
         </div>
+    </>
     );
 }
