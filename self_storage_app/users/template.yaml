@@ -128,7 +128,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: Handler for all users related operations
-      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-pdpvxfupoe7x/self-storage-solution/3d7fb85f00102ce79190f99417dd6722
+      CodeUri: ./src/api
       Handler: units.lambda_handler
       Environment:
         Variables:
@@ -198,7 +198,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: Handler for all users related operations
-      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-pdpvxfupoe7x/self-storage-solution/3d7fb85f00102ce79190f99417dd6722
+      CodeUri: ./src/api
       Handler: users.lambda_handler
       Environment:
         Variables:
@@ -379,7 +379,7 @@ Resources:
   AuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-pdpvxfupoe7x/self-storage-solution/3d7fb85f00102ce79190f99417dd6722
+      CodeUri: ./src/api
       Handler: authorizer.lambda_handler
       Description: Handler for Lambda authorizer
       Environment:
