@@ -36,7 +36,6 @@ def create_unit(unit_attributes, request_body):
     unit_data = {
         'unitId': unit_attributes.get('unitId'),
         'facilityId': unit_attributes.get('facilityId'),
-        'email': unit_attributes.get('email'),
         'size' : unit_attributes.get('size'),
         'status' : unit_attributes.get('status'),
         'price' : unit_attributes.get('price'),
@@ -48,7 +47,7 @@ def create_unit(unit_attributes, request_body):
     ddbTable.put_item(Item=unit_data)
     return unit_data
 
-def update_unit(unit_id, request_body):
+def update_unit(unit_attributes,unit_id, request_body):
     unit_data = {
         'unitId': unit_id,
         'bookedUserId' : unit_attributes.get('bookedUserId'),
