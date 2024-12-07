@@ -138,17 +138,17 @@ class AuthPolicy(object):
     allowMethods = []
     denyMethods = []
 
-    restApiId = "<<restApiId>>"
+    restApiId = "asgt8dbww4"
     """ Replace the placeholder value with a default API Gateway API id to be used in the policy. 
     Beware of using '*' since it will not simply mean any API Gateway API id, because stars will greedily expand over '/' or other separators. 
     See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html for more details. """
 
-    region = "<<region>>"
+    region = "eu-west-1"
     """ Replace the placeholder value with a default region to be used in the policy. 
     Beware of using '*' since it will not simply mean any region, because stars will greedily expand over '/' or other separators. 
     See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html for more details. """
 
-    stage = "<<stage>>"
+    stage = "Prod"
     """ Replace the placeholder value with a default stage to be used in the policy. 
     Beware of using '*' since it will not simply mean any stage, because stars will greedily expand over '/' or other separators. 
     See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html for more details. """

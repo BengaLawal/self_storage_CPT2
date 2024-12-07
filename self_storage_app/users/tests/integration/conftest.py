@@ -22,9 +22,11 @@ def get_stack_outputs(stack_name):
     return result
 
 def generate_password(length=12):
-    """Generate a secure random password."""
-    alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
+    """Generate a secure random password with at least one numeric character."""
+    digits = secrets.choice(string.digits)
+    rest = ''.join(secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(length - 1))
+    return ''.join(secrets.SystemRandom().sample(digits + rest, length))
+
 
 def create_cognito_accounts():
     result = {}
