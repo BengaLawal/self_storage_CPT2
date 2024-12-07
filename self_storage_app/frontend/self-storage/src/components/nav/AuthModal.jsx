@@ -1,31 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+
+// Import from AWS Amplify v6
+import { Amplify } from 'aws-amplify';
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
+
+// Import React Router for navigation
+import { useNavigate } from 'react-router-dom';
+
+// Import your AWS configuration
+import { awsExports } from '../../aws-exports';
+
+// Amplify configuration
+Amplify.configure({
+    Auth: {
+        Cognito: {
+            userPoolId: awsExports.USER_POOL_ID,
+            userPoolClientId: awsExports.USER_POOL_APP_CLIENT_ID,
+            loginWith: {
+                email: true,
+                oauth: {
+                    domain: awsExports.OAUTH_DOMAIN,
+                    scopes: ['email', 'openid', 'profile'],
+                    redirectSignIn: ['http://localhost:5173/'],
+                    redirectSignOut: ['http://localhost:5173/'],
+                }
+            }
+        }
+    }
+});
+
+// Optional: Set up token provider
+cognitoUserPoolsTokenProvider.setAuthConfig({
+    Cognito: {
+        userPoolId: awsExports.USER_POOL_ID,
+        userPoolClientId: awsExports.USER_POOL_APP_CLIENT_ID,
+    }
+});
+
+// Separate component to handle authentication
+function AuthHandler() {
+    const { user } = useAuthenticator((context) => [context.user]);
+    const navigate = useNavigate();
+
+    React.useEffect(() => {
+        try {
+            if (user) {
+                navigate('/client', {
+                    state: { user: { id: user.userId } }
+                });
+            }
+        } catch (error) {
+            console.error("Navigation error:", error);
+            // Optionally add fallback navigation or error handling
+        }
+    }, [user, navigate]);
+
+    return null;
+}
 
 export default function AuthModal() {
     const [isOpen, setIsOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('login');
-
-    const handleLogin = (e) => {
-        e.preventDefault();
-        // Login logic will be implemented later
-        console.log('Login attempted');
-    };
-
-    const handleSignup = (e) => {
-        e.preventDefault();
-        // Signup logic will be implemented later
-        console.log('Signup attempted');
-    };
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button variant="outline" className="bg-blue-600 text-white hover:bg-blue-700">
-                    Login
+                    Login / Sign Up
                 </Button>
             </DialogTrigger>
 
@@ -34,145 +78,53 @@ export default function AuthModal() {
                     <DialogTitle className="text-center text-3xl mb-4">
                         Welcome to Self Storage
                     </DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Authentication dialog for logging in or signing up
+                    </DialogDescription>
                 </DialogHeader>
 
-                <Tabs
-                    defaultValue="login"
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                    className="w-full"
+                <Authenticator
+                    initialState="signIn"
+                    components={{
+                        SignUp: {
+                            FormFields() {
+                                return (
+                                    <>
+                                        <div className="amplify-flex amplify-field amplify-textfield">
+                                            <label
+                                                htmlFor="name"
+                                                className="amplify-label"
+                                            >
+                                                Full Name
+                                            </label>
+                                            <input
+                                                name="name"
+                                                id="name"
+                                                type="text"
+                                                placeholder="Enter your full name"
+                                                className="amplify-input"
+                                                required
+                                            />
+                                        </div>
+                                        <Authenticator.SignUp.FormFields />
+                                    </>
+                                );
+                            },
+                        },
+                    }}
+                    services={{
+                        async validateCustomSignUp(formData) {
+                            if (!formData.name) {
+                                return {
+                                    name: 'Full Name is required',
+                                };
+                            }
+                        },
+                    }}
                 >
-                    <TabsList className="grid w-full grid-cols-2 mb-6">
-                        <TabsTrigger
-                            value="login"
-                            className="data-[state=active]:bg-blue-600 bg-transparent border-2 border-blue-400"
-                        >
-                            Login
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="signup"
-                            className="data-[state=active]:bg-orange-500 bg-transparent border-2 border-orange-400"
-                        >
-                            Sign Up
-                        </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="login">
-                        <form onSubmit={handleLogin} className="space-y-6">
-                            <div>
-                                <Label htmlFor="login-email" className="text-lg mb-2 block">
-                                    Email Address
-                                </Label>
-                                <Input
-                                    id="login-email"
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    className="h-12 text-base"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <Label htmlFor="login-password" className="text-lg mb-2 block">
-                                    Password
-                                </Label>
-                                <Input
-                                    id="login-password"
-                                    type="password"
-                                    placeholder="Enter your password"
-                                    className="h-12 text-base"
-                                    required
-                                />
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-base"
-                            >
-                                Login
-                            </Button>
-
-                            <div className="text-center">
-                                <a href="#" className="text-blue-600 hover:underline">
-                                    Forgot Password?
-                                </a>
-                            </div>
-                        </form>
-                    </TabsContent>
-
-                    <TabsContent value="signup">
-                        <form onSubmit={handleSignup} className="grid grid-cols-2 gap-4">
-                            <div className="col-span-1">
-                                <Label htmlFor="signup-name" className="text-lg mb-2 block">
-                                    Full Name
-                                </Label>
-                                <Input
-                                    id="signup-name"
-                                    type="text"
-                                    placeholder="Enter your full name"
-                                    className="h-12 text-base"
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-span-1">
-                                <Label htmlFor="signup-email" className="text-lg mb-2 block">
-                                    Email Address
-                                </Label>
-                                <Input
-                                    id="signup-email"
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    className="h-12 text-base"
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-span-1">
-                                <Label htmlFor="signup-password" className="text-lg mb-2 block">
-                                    Password
-                                </Label>
-                                <Input
-                                    id="signup-password"
-                                    type="password"
-                                    placeholder="Create a strong password"
-                                    className="h-12 text-base"
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-span-1">
-                                <Label htmlFor="signup-confirm-password" className="text-lg mb-2 block">
-                                    Confirm Password
-                                </Label>
-                                <Input
-                                    id="signup-confirm-password"
-                                    type="password"
-                                    placeholder="Repeat your password"
-                                    className="h-12 text-base"
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-span-2">
-                                <Button
-                                    type="submit"
-                                    className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-base"
-                                >
-                                    Create Account
-                                </Button>
-                            </div>
-
-                            <div className="col-span-2 text-center text-sm text-gray-600">
-                                By signing up, you agree to our
-                                <a href="#" className="text-blue-600 ml-1 hover:underline">
-                                    Terms of Service
-                                </a>
-                            </div>
-                        </form>
-                    </TabsContent>
-                </Tabs>
+                    {() => <AuthHandler />}
+                </Authenticator>
             </DialogContent>
         </Dialog>
     );
-};
+}
