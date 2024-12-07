@@ -5,7 +5,7 @@ import boto3
 from decimal import Decimal
 
 # Prepare DynamoDB client
-units_TABLE = os.getenv('UNITS_TABLE', None)
+UNITS_TABLE = os.getenv('UNITS_TABLE', None)
 dynamodb = boto3.resource('dynamodb')
 ddbTable = dynamodb.Table(UNITS_TABLE)
 
