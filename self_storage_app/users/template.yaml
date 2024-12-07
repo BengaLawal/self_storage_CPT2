@@ -108,6 +108,92 @@ Resources:
         - Arn
     Metadata:
       SamResourceId: OnCognitoSignupPermission
+    #new
+  UnitsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: unitId
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: unitId
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+    #new
+
+    #new lambda
+  UnitsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Handler for all users related operations
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-pdpvxfupoe7x/self-storage-solution/3d7fb85f00102ce79190f99417dd6722
+      Handler: units.lambda_handler
+      Environment:
+        Variables:
+          UNITS_TABLE:
+            Ref: UnitsTable
+          UNITS_TABLE_ARN:
+            Fn::GetAtt:
+            - UnitsTable
+            - Arn
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UnitsTable
+      Tags:
+        Stack:
+          Fn::Sub: ${AWS::StackName}
+      Events:
+        GetUsersEvent:
+          Type: Api
+          Properties:
+            Path: /units
+            Method: get
+            RestApiId:
+              Ref: RestAPI
+        PutUserEvent:
+          Type: Api
+          Properties:
+            Path: /units
+            Method: post
+            RestApiId:
+              Ref: RestAPI
+        UpdateUserEvent:
+          Type: Api
+          Properties:
+            Path: /units/{unitId}
+            Method: put
+            RestApiId:
+              Ref: RestAPI
+        GetUserEvent:
+          Type: Api
+          Properties:
+            Path: /units/{unitId}
+            Method: get
+            RestApiId:
+              Ref: RestAPI
+        DeleteUserEvent:
+          Type: Api
+          Properties:
+            Path: /units/{unitId}
+            Method: delete
+            RestApiId:
+              Ref: RestAPI
+    Metadata:
+      SamResourceId: UnitsFunction
+  UsersFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName:
+        Fn::Sub: /aws/lambda/${UnitsFunction}
+    Metadata:
+      SamResourceId: UnitsFunctionLogGroup
+
+
+    # new lambda
   UsersFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -498,6 +584,14 @@ Outputs:
     Description: Lambda function used to perform actions on the users data
     Value:
       Ref: UsersFunction
+  UnitsTable:
+    Description: DynamoDB Users table
+    Value:
+      Ref: UnitsTable
+  UnitsFunction:
+    Description: Lambda function used to perform actions on the users data
+    Value:
+      Ref: UnitsFunction
   APIEndpoint:
     Description: API Gateway endpoint URL
     Value:

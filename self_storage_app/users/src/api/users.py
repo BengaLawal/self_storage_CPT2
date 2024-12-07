@@ -2,11 +2,22 @@ import json
 import os
 from datetime import datetime
 import boto3
+from decimal import Decimal
 
 # Prepare DynamoDB client
 USERS_TABLE = os.getenv('USERS_TABLE', None)
 dynamodb = boto3.resource('dynamodb')
 ddbTable = dynamodb.Table(USERS_TABLE)
+
+# Utility function to handle Decimal
+def convert_decimal(obj):
+    if isinstance(obj, list):
+        return [convert_decimal(i) for i in obj]
+    elif isinstance(obj, dict):
+        return {k: convert_decimal(v) for k, v in obj.items()}
+    elif isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    return obj
 
 # Functions for CRUD operations
 def get_users():
@@ -83,6 +94,7 @@ def lambda_handler(event, context):
             route_key = f"{event['httpMethod']} {event['resource']}"
             if route_key in operations:
                 response_body = operations[route_key](event)
+                response_body = convert_decimal(response_body)
                 status_code = 200
             else:
                 raise ValueError(f"Unsupported route: {route_key}")
@@ -93,6 +105,6 @@ def lambda_handler(event, context):
 
     return {
         'statusCode': status_code,
-        'body': json.dumps(response_body),
+        'body': json.dumps(convert_decimal(response_body)),
         'headers': headers
     }
