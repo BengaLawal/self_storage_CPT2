@@ -82,7 +82,7 @@ operations = {
         event['request']['unitAttributes'], json.loads(event['body'])
     ),
     'PUT /units/{unitId}': lambda event: update_unit(
-        event['pathParameters']['unitId'], json.loads(event['body'])
+        event['request']['unitAttributes'],event['pathParameters']['unitId'], json.loads(event['body'])
     ),
     'PostConfirmation_ConfirmSignUp': lambda event: handle_post_confirmation(
         event['request']['unitAttributes']
