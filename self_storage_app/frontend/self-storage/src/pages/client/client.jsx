@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from 'aws-amplify/auth';
 import Nav from "@/components/nav/nav.jsx";
+import {StorageUnits} from "@/components/storageUnits/storageUnits.jsx";
 
 export default function ClientPage() {
     const location = useLocation();
@@ -10,6 +11,7 @@ export default function ClientPage() {
 
     // Safely extract user data from location state
     const { user } = location.state || {};
+    // eslint-disable-next-line no-unused-vars
     const { id, username, signInDetails } = user || {};
 
     useEffect(() => {
@@ -39,6 +41,7 @@ export default function ClientPage() {
             <div className="w-4/5 mx-auto bg-transparent p-2 mt-2">
                 <h4 className="text-xl font-medium mb-4 text-amber-400">Hello, <span className={"italic"}>{user.signInDetails.loginId.split("@")[0]}</span>, you are a client.</h4>
 
+                <StorageUnits />
             </div>
         </div>
     </>
