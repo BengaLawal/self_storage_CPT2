@@ -9,6 +9,12 @@ USERS_TABLE = os.getenv('USERS_TABLE', None)
 dynamodb = boto3.resource('dynamodb')
 ddbTable = dynamodb.Table(USERS_TABLE)
 
+# # Initialize the Cognito Identity Provider client
+# cognito_idp = boto3.client('cognito-idp')
+# # Get the user pool ID from environment variables
+# USER_POOL_ID = os.getenv('USER_POOL_ID')
+# print(USER_POOL_ID)
+
 # Utility function to handle Decimal
 def convert_decimal(obj):
     if isinstance(obj, list):
@@ -52,6 +58,53 @@ def update_user(user_id, request_body):
     ddbTable.put_item(Item=user_data)
     return user_data
 
+def is_user_admin(user_id):
+    """
+    Checks if a user has an admin role.
+    This assumes the 'role' attribute is stored in the user item in the DynamoDB table.
+    """
+    # Fetch the user by ID
+    user = get_user_by_id(user_id)
+
+    # Default response if user is not found
+    if not user:
+        return {
+            'name': None,
+            'email': None,
+            'isAdmin': False
+        }
+
+    return {
+        'name': user.get('name'),
+        'email': user.get('email'),
+        'isAdmin': user.get('role', '').lower() == 'admin'
+    }
+
+# def is_user_admin(userid):
+#     try:
+#         # Check if user is in the 'admin' group
+#         is_admin = any(
+#             group['GroupName'].lower() == 'apiadmins'
+#             for group in cognito_idp.admin_list_groups_for_user(UserPoolId=USER_POOL_ID, Username=userid)['Groups']
+#         )
+#
+#         # Get user attributes
+#         user_attributes = {
+#             attr['Name']: attr['Value']
+#             for attr in cognito_idp.admin_get_user(UserPoolId=USER_POOL_ID, Username=userid)['UserAttributes']
+#         }
+#
+#         return {
+#             'name': user_attributes.get('name'),
+#             'email': user_attributes.get('email'),
+#             'isAdmin': is_admin
+#         }
+#     except cognito_idp.exceptions.UserNotFoundException:
+#         return {'name': None, 'email': None, 'isAdmin': False}
+#     except Exception as e:
+#         print(f"Error checking user admin status: {str(e)}")
+#         raise
+
 def handle_post_confirmation(user_attributes):
     user_data = {
         'userid': user_attributes.get('sub'),
@@ -75,6 +128,9 @@ operations = {
     ),
     'PostConfirmation_ConfirmSignUp': lambda event: handle_post_confirmation(
         event['request']['userAttributes']
+    ),
+    'GET /users/{userid}/isAdmin': lambda event: is_user_admin(
+        event['pathParameters']['userid']
     ),
 }
 

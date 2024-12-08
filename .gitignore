@@ -249,3 +249,7 @@ $RECYCLE.BIN/
 *.venv*
 samconfig.toml
 **/.aws-composer
+.idea/.gitignore
+.idea/modules.xml
+.idea/self_storage_CPT2.iml
+.idea/vcs.xml
