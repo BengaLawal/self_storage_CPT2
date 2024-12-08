@@ -61,7 +61,7 @@ def create_unit(unit_attributes, request_body):
     ddbTable.put_item(Item=unit_data)
     return unit_data
 
-def update_unit_full(unit_id, request_body):
+def update_unit(unit_id, request_body):
     #Get the existing unit data
     existing_unit_data = get_unit_by_id(unit_id)
     
