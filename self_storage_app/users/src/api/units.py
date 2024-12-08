@@ -33,32 +33,52 @@ def delete_unit(unit_id):
     return {}
 
 def create_unit(unit_attributes, request_body):
+    
+    discounts = request_body.get('discounts', [])
+    if discounts:
+
+        processed_discounts = [
+            {
+                'type': discount.get('type'),
+                'amount': discount.get('amount'),
+                'description': discount.get('description')
+            }
+            for discount in discounts
+        ]
+    else:
+        processed_discounts = []
+    
     unit_data = {
         'unitId': unit_attributes.get('unitId'),
         'facilityId': unit_attributes.get('facilityId'),
         'size' : unit_attributes.get('size'),
         'status' : unit_attributes.get('status'),
         'price' : unit_attributes.get('price'),
-        'discount' : unit_attributes.get('discount'),
+        'discounts': processed_discounts,
         
-
         **request_body
     }
     ddbTable.put_item(Item=unit_data)
     return unit_data
 
-def update_unit(unit_attributes,unit_id, request_body):
-    unit_data = {
-        'unitId': unit_id,
-        'bookedUserId' : unit_attributes.get('bookedUserId'),
-        'userBillingOption' : unit_attributes.get('userBillingOption'),
-        'sharedAccess': unit_attributes.get('sharedAccess'),
-        'startDate': datetime.now().isoformat(),
-        'endDate':datetime.now().isoformat(),
-        **request_body
+def update_unit(unit_id, request_body):
+    #Get the existing unit data
+    existing_unit_data = get_unit_by_id(unit_id)
+    
+    if not existing_unit_data:
+        raise ValueError(f"Unit with ID {unit_id} does not exist.")
+    
+    #Merge existing data with new fields from request_body
+    unit_attributes = {
+        **existing_unit_data,  # Start with the current data
+        **request_body         # Overwrite with any new values
     }
-    ddbTable.put_item(Item=unit_data)
-    return unit_data
+    
+    #Write the updated item back to the table
+    ddbTable.put_item(Item=unit_attributes)
+    
+    return unit_attributes
+
 
 def handle_post_confirmation(unit_attributes):
     unit_data = {
@@ -82,7 +102,7 @@ operations = {
         event['request']['unitAttributes'], json.loads(event['body'])
     ),
     'PUT /units/{unitId}': lambda event: update_unit(
-        event['request']['unitAttributes'],event['pathParameters']['unitId'], json.loads(event['body'])
+        event['pathParameters']['unitId'], json.loads(event['body'])
     ),
     'PostConfirmation_ConfirmSignUp': lambda event: handle_post_confirmation(
         event['request']['unitAttributes']

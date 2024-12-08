@@ -183,7 +183,7 @@ Resources:
               Ref: RestAPI
     Metadata:
       SamResourceId: UnitsFunction
-  UsersFunctionLogGroup:
+  UnitsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
     Properties:
@@ -249,6 +249,13 @@ Resources:
           Properties:
             Path: /users/{userid}
             Method: delete
+            RestApiId:
+              Ref: RestAPI
+        IsAdminEvent:
+          Type: Api
+          Properties:
+            Path: /users/{userid}/isAdmin
+            Method: get
             RestApiId:
               Ref: RestAPI
     Metadata:
