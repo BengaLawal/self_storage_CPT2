@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 // eslint-disable-next-line no-unused-vars
-export function StorageUnits( {apiClient}) {
+export function StorageUnits( {apiClient, pictures}) {
     const currentUserId = "user123";
     const [availableUnits, setAvailableUnits] = useState(
         DUMMY_UNITS.filter(unit => !unit.isRented)
@@ -125,6 +125,14 @@ export function StorageUnits( {apiClient}) {
         }
     };
 
+    function randomUnit() {
+        const units = pictures;
+        const randIndex = Math.floor(Math.random() * units.length);
+        const randUnit = units[randIndex];
+        console.log("Units: " + randUnit)
+        return randUnit
+    }
+
     const handleCancelRental = (unitId) => {
         const unitToCancel = rentedUnits.find(unit => unit.id === unitId);
 
@@ -166,7 +174,7 @@ export function StorageUnits( {apiClient}) {
                                     >
                                         <CardHeader className="relative p-0 pb-6 ">
                                             <img
-                                                src={unit.imageUrl}
+                                                src={randomUnit()}
                                                 alt={`${unit.type} storage unit`}
                                                 className="top-0 left-0 w-full aspect-video object-cover opacity-90 rounded-t-lg bg-black"
                                             />
@@ -242,7 +250,7 @@ export function StorageUnits( {apiClient}) {
                                         {/* Card Header */}
                                         <CardHeader className="relative p-0 pb-6">
                                             <img
-                                                src={unit.imageUrl}
+                                                src={randomUnit()}
                                                 alt={`${unit.type} storage unit`}
                                                 className="top-0 left-0 w-full aspect-video object-cover opacity-90 rounded-t-lg bg-black"
                                             />
@@ -349,7 +357,7 @@ export function StorageUnits( {apiClient}) {
                                 <div>
                                     {expandedUnit?.imageUrl && (
                                         <img
-                                            src={expandedUnit.imageUrl}
+                                            src={randomUnit()}
                                             alt={expandedUnit.facility}
                                             className="w-full h-64 object-cover rounded-lg mb-4"
                                         />

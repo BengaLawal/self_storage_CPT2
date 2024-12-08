@@ -4,7 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from 'aws-amplify/auth';
 import Nav from "@/components/nav/nav.jsx";
 import { StorageUnits } from "@/components/storageUnits/storageUnits.jsx";
-import createApiClient from "@/api/api.jsx"; // Adjust the import path as needed
+import imgs from "@/components/storageUnits/imgs.js";
+import createApiClient from "@/api/api.jsx";
 
 export default function ClientPage() {
     const location = useLocation();
@@ -29,6 +30,7 @@ export default function ClientPage() {
         setApiClient(client);
     }, [user, token, navigate]);
 
+
     const handleSignOut = async () => {
         try {
             await signOut();
@@ -42,13 +44,16 @@ export default function ClientPage() {
     if (!user || !token) {
         return null;
     }
+
+
+
     const message = `Hello, ${user.signInDetails.loginId.split("@")[0]}, you are a client.`
     return (
         <div className="min-h-dvh w-dvw text-black bg-gray-100 absolute top-0 left-0">
             <Nav handleLogout={handleSignOut} text={message}/>
             <div className="w-4/5 mx-auto bg-transparent p-2 mt-2">
                 {/* Pass the API client to StorageUnits component */}
-                <StorageUnits apiClient={apiClient} />
+                <StorageUnits apiClient={apiClient} pictures = {imgs} />
             </div>
         </div>
     );
