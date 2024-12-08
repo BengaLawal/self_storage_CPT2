@@ -3,7 +3,7 @@ import AuthModal from './AuthModal';
 import React from "react"; // Update the import
 
 // eslint-disable-next-line react/prop-types
-export default function Nav({isHome = false, handleLogout = null}) {
+export default function Nav({isHome = false, handleLogout = null, text = ""}) {
     const navigate = useNavigate();
 
     return (
@@ -14,6 +14,11 @@ export default function Nav({isHome = false, handleLogout = null}) {
             >
                 Self Storage
             </div>
+
+            {!isHome && <div>
+                <h1 className="text-2xl font-bold mb-4 text-white">{text}</h1>
+            </div>}
+
 
             <div className="flex items-center space-x-4">
                 <button

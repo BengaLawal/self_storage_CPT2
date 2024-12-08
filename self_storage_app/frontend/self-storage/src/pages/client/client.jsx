@@ -1,25 +1,33 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from 'aws-amplify/auth';
 import Nav from "@/components/nav/nav.jsx";
-import {StorageUnits} from "@/components/storageUnits/storageUnits.jsx";
+import { StorageUnits } from "@/components/storageUnits/storageUnits.jsx";
+import createApiClient from "@/api/api.jsx"; // Adjust the import path as needed
 
 export default function ClientPage() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    // Safely extract user data from location state
-    const { user } = location.state || {};
-    // eslint-disable-next-line no-unused-vars
+    // Safely extract user and token data from location state
+    const { user, token } = location.state || {};
     const { id, username, signInDetails } = user || {};
 
+    // State to manage API client
+    const [apiClient, setApiClient] = useState(null);
+
     useEffect(() => {
-        // If no user is found, redirect to home
-        if (!user) {
+        // If no user or token is found, redirect to home
+        if (!user || !token) {
             navigate('/');
+            return;
         }
-    }, [user, navigate]);
+
+        // Create API client with the token
+        const client = createApiClient(token);
+        setApiClient(client);
+    }, [user, token, navigate]);
 
     const handleSignOut = async () => {
         try {
@@ -30,20 +38,18 @@ export default function ClientPage() {
         }
     };
 
-    // If no user, return null to prevent rendering
-    if (!user) {
+    // If no user or token, return null to prevent rendering
+    if (!user || !token) {
         return null;
     }
-
-    return (<>
+    const message = `Hello, ${user.signInDetails.loginId.split("@")[0]}, you are a client.`
+    return (
         <div className="min-h-dvh w-dvw text-black bg-gray-100 absolute top-0 left-0">
-            <Nav handleLogout={handleSignOut}/>
+            <Nav handleLogout={handleSignOut} text={message}/>
             <div className="w-4/5 mx-auto bg-transparent p-2 mt-2">
-                <h4 className="text-xl font-medium mb-4 text-amber-400">Hello, <span className={"italic"}>{user.signInDetails.loginId.split("@")[0]}</span>, you are a client.</h4>
-
-                <StorageUnits />
+                {/* Pass the API client to StorageUnits component */}
+                <StorageUnits apiClient={apiClient} />
             </div>
         </div>
-    </>
     );
 }

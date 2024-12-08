@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Plus, X } from "lucide-react";
 import { DUMMY_UNITS } from "@/components/storageUnits/units.js";
+import { StorageUnitAccess } from './StorageUnitAccess';
 import {
     CalendarIcon,
     CheckCircleIcon,
@@ -18,7 +19,8 @@ import {
     WarehouseIcon
 } from "lucide-react";
 
-export function StorageUnits() {
+// eslint-disable-next-line no-unused-vars
+export function StorageUnits( {apiClient}) {
     const currentUserId = "user123";
     const [availableUnits, setAvailableUnits] = useState(
         DUMMY_UNITS.filter(unit => !unit.isRented)
@@ -34,7 +36,12 @@ export function StorageUnits() {
     const [currentEmail, setCurrentEmail] = useState('');
     const [sharingType, setSharingType] = useState('permanent');
     const [sharingPeriod, setSharingPeriod] = useState(1);
+    const [accessDialogUnit, setAccessDialogUnit] = useState(null);
 
+
+    const handleAccessUnit = (unit) => {
+        setAccessDialogUnit(unit);
+    };
     const formatCurrency = (amount) =>
         new Intl.NumberFormat('en-ZA', {
             style: 'currency',
@@ -298,6 +305,13 @@ export function StorageUnits() {
 
                                         {/* Card Footer */}
                                         <CardFooter className="flex flex-col space-y-2">
+                                            <Button
+                                                onClick={() => handleAccessUnit(unit)}
+                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                            >
+                                                Access Unit
+                                            </Button>
+
                                             <Button
                                                 onClick={() => handleShowMore(unit)}
                                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
@@ -577,6 +591,11 @@ export function StorageUnits() {
                 </Dialog>
 
             </div>
+            {/*<StorageUnitAccess*/}
+            {/*    unit={accessDialogUnit}*/}
+            {/*    isOpen={!!accessDialogUnit}*/}
+            {/*    onClose={() => setAccessDialogUnit(null)}*/}
+            {/*/>*/}
         </div>
     )
 }

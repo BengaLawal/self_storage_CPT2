@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { useNavigate } from 'react-router-dom';
-import checkAdminStatus from './api.jsx'; // Import your admin-checking function
+import { fetchAuthSession } from 'aws-amplify/auth';
+import {checkAdminStatus} from './api.jsx'; // Import your admin-checking function
 
 export default function HandleAuthStateChange() {
     const { user } = useAuthenticator((context) => [context.user]); // Get the authenticated user
@@ -11,20 +12,47 @@ export default function HandleAuthStateChange() {
         async function checkAndNavigate() {
             if (user) {
                 try {
-                    const isAdmin = await checkAdminStatus(user.userId); // Check if the user is an admin
+                    // Fetch the authentication session to get tokens
+                    const { tokens } = await fetchAuthSession();
+
+                    // Get the JWT token
+                    const idToken = tokens?.idToken?.toString();
+
+                    if (!idToken) {
+                        console.error('No authentication token found');
+                        navigate('/');
+                        return;
+                    }
+
+                    // Check admin status using the token
+                    const isAdmin = await checkAdminStatus(user.userId, idToken);
 
                     if (isAdmin) {
                         navigate('/dashboard', {
-                            state: { user: { id: user.userId, username: user.username, signInDetails:user.signInDetails } }
+                            state: {
+                                user: {
+                                    id: user.userId,
+                                    username: user.username,
+                                    signInDetails: user.signInDetails
+                                },
+                                token: idToken
+                            }
                         });
                     } else {
                         navigate('/client', {
-                            state: { user: { id: user.userId, username: user.username, signInDetails:user.signInDetails } }
+                            state: {
+                                user: {
+                                    id: user.userId,
+                                    username: user.username,
+                                    signInDetails: user.signInDetails
+                                },
+                                token: idToken
+                            }
                         });
                     }
                 } catch (error) {
                     console.error('Error checking user role:', error);
-                    navigate('/error'); // Navigate to an error page if needed
+                    navigate('/'); // Navigate to home or error page
                 }
             }
         }
