@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 from datetime import datetime
 import boto3
 from decimal import Decimal
@@ -38,16 +39,17 @@ def delete_user(user_id):
     ddbTable.delete_item(Key={'userid': user_id})
     return {}
 
-def create_user(user_attributes, request_body):
-    user_data = {
-        'userid': user_attributes.get('sub'),
-        'email': user_attributes.get('email'),
-        'name': user_attributes.get('name'),
-        'timestamp': datetime.now().isoformat(),
-        **request_body
-    }
-    ddbTable.put_item(Item=user_data)
-    return user_data
+def create_user(event):
+    request_json = json.loads(event['body'])
+    request_json['timestamp'] = datetime.now().isoformat()
+    # generate unique id if it isn't present in the request
+    if 'userid' not in request_json:
+        request_json['userid'] = str(uuid.uuid1())
+    # update the database
+    ddbTable.put_item(
+        Item=request_json
+    )
+    return request_json
 
 def update_user(user_id, request_body):
     user_data = {
@@ -121,7 +123,7 @@ operations = {
     'GET /users/{userid}': lambda event: get_user_by_id(event['pathParameters']['userid']),
     'DELETE /users/{userid}': lambda event: delete_user(event['pathParameters']['userid']),
     'POST /users': lambda event: create_user(
-        event['request']['userAttributes'], json.loads(event['body'])
+        event
     ),
     'PUT /users/{userid}': lambda event: update_user(
         event['pathParameters']['userid'], json.loads(event['body'])
