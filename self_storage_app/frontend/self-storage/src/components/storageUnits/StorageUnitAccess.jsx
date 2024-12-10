@@ -5,7 +5,10 @@ import { Input } from "@/components/ui/input";
 import { QrCodeIcon, UnlockIcon, LockIcon } from 'lucide-react';
 
 // eslint-disable-next-line react/prop-types
-export function StorageUnitAccess({ unit, isOpen, onClose }) {
+export function StorageUnitAccess({ unit, isOpen, onClose, onUnlock }) {
+    if (!unit) {
+        return null;
+    }
     const [accessMethod, setAccessMethod] = useState('pin');
     const [pin, setPin] = useState('');
     const [isUnlocked, setIsUnlocked] = useState(false);
@@ -24,10 +27,30 @@ export function StorageUnitAccess({ unit, isOpen, onClose }) {
         if (pin === correctPin) {
             setIsUnlocked(true);
             logAccess(true);
+            // Call the onUnlock prop to update parent component
+            onUnlock(unit.id);
         } else {
             logAccess(false);
             alert('Incorrect PIN. Access denied.');
         }
+    };
+
+    const handleLock = () => {
+        // Reset the unlocked state
+        setIsUnlocked(false);
+        onClose();
+
+        // Log the manual locking action
+        const lockLog = {
+            timestamp: new Date().toISOString(),
+            unitId: unit.id,
+            action: 'Manual Lock'
+        };
+
+        setAccessLogs(prev => [lockLog, ...prev].slice(0, 5));
+
+        // Optionally, you can add a callback to the parent component if needed
+        onClose();
     };
 
     const logAccess = (success) => {
@@ -54,10 +77,11 @@ export function StorageUnitAccess({ unit, isOpen, onClose }) {
                                 onChange={(e) => setPin(e.target.value)}
                                 maxLength={4}
                                 className="flex-grow"
+                                disabled={isUnlocked}
                             />
                             <Button
                                 onClick={handleUnlock}
-                                disabled={pin.length !== 4}
+                                disabled={pin.length !== 4 || isUnlocked}
                                 className="bg-green-500 hover:bg-green-600"
                             >
                                 Unlock
@@ -75,15 +99,24 @@ export function StorageUnitAccess({ unit, isOpen, onClose }) {
         }
     };
 
+    const handleClose = () => {
+        // Prevent closing if unit is unlocked
+        if (!isUnlocked) {
+            onClose();
+        }
+    };
+
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
+        <Dialog
+            open={isOpen}
+            onOpenChange={handleClose}
+        >
             <DialogContent className="bg-white text-black max-w-md">
                 <DialogHeader>
                     <DialogTitle>
                         {isUnlocked ? 'Access Granted' : 'Unlock Storage Unit'}
                     </DialogTitle>
                     <DialogDescription>
-                        {console.log("This is meant to be a unit "+ unit)}
                         {unit.type} - {unit.facility}
                     </DialogDescription>
                 </DialogHeader>
@@ -93,12 +126,14 @@ export function StorageUnitAccess({ unit, isOpen, onClose }) {
                         <Button
                             variant={accessMethod === 'pin' ? 'default' : 'outline'}
                             onClick={() => setAccessMethod('pin')}
+                            disabled={isUnlocked}
                         >
                             PIN Entry
                         </Button>
                         <Button
                             variant={accessMethod === 'qr' ? 'default' : 'outline'}
                             onClick={() => setAccessMethod('qr')}
+                            disabled={isUnlocked}
                         >
                             QR Scan
                         </Button>
@@ -107,11 +142,20 @@ export function StorageUnitAccess({ unit, isOpen, onClose }) {
                     {renderAccessMethod()}
 
                     {isUnlocked && (
-                        <div className="bg-green-50 p-4 rounded-lg flex items-center space-x-2">
-                            <UnlockIcon className="text-green-600" />
-                            <span className="font-semibold text-green-800">
-                                Unit Unlocked Successfully
-                            </span>
+                        <div className="bg-green-50 p-4 rounded-lg flex items-center justify-between space-x-2">
+                            <div className="flex items-center space-x-2">
+                                <UnlockIcon className="text-green-600" />
+                                <span className="font-semibold text-green-800">
+                                    Unit Unlocked Successfully
+                                </span>
+                            </div>
+                            <Button
+                                onClick={handleLock}
+                                variant="destructive"
+                                size="sm"
+                            >
+                                <LockIcon className="mr-2 h-4 w-4" /> Lock Unit
+                            </Button>
                         </div>
                     )}
 
@@ -122,11 +166,13 @@ export function StorageUnitAccess({ unit, isOpen, onClose }) {
                             {accessLogs.map((log, index) => (
                                 <div
                                     key={index}
-                                    className={`p-2 ${log.success ? 'bg-green-100' : 'bg-red-100'} rounded mb-1`}
+                                    className={`p-2 ${log.success === true ? 'bg-green-100' : log.action === 'Manual Lock' ? 'bg-blue-100' : 'bg-red-100'} rounded mb-1`}
                                 >
                                     <p className="text-xs">
                                         {new Date(log.timestamp).toLocaleString()} -
-                                        {log.success ? 'Successful' : 'Failed'} Access
+                                        {log.success === true ? 'Successful Access' :
+                                            log.action === 'Manual Lock' ? 'Manual Lock' :
+                                                'Failed Access'}
                                     </p>
                                 </div>
                             ))}

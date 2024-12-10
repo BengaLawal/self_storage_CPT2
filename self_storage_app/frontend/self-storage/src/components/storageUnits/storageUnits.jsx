@@ -37,11 +37,9 @@ export function StorageUnits( {apiClient, pictures}) {
     const [sharingType, setSharingType] = useState('permanent');
     const [sharingPeriod, setSharingPeriod] = useState(1);
     const [accessDialogUnit, setAccessDialogUnit] = useState(null);
+    const [unlockedUnits, setUnlockedUnits] = useState([]);
 
 
-    const handleAccessUnit = (unit) => {
-        setAccessDialogUnit(unit);
-    };
     const formatCurrency = (amount) =>
         new Intl.NumberFormat('en-ZA', {
             style: 'currency',
@@ -67,6 +65,24 @@ export function StorageUnits( {apiClient, pictures}) {
     const handleShowMore = (unit) => {
         setSelectedUnit(unit);
         setExpandedUnit(unit);
+    };
+
+
+    const handleAccessUnit = (unit) => {
+        setAccessDialogUnit(unit);
+    };
+
+    const handleUnitUnlock = (unitId) => {
+        // Add the unit to the unlocked units list
+        setUnlockedUnits(prev => [...prev, unitId]);
+    };
+
+    const handleCloseAccessDialog = () => {
+        // Only allow closing if the unit is not unlocked
+        const isUnitUnlocked = unlockedUnits.includes(accessDialogUnit?.id);
+        if (!isUnitUnlocked) {
+            setAccessDialogUnit(null);
+        }
     };
 
     const confirmRental = (billingOption) => {
@@ -599,11 +615,14 @@ export function StorageUnits( {apiClient, pictures}) {
                 </Dialog>
 
             </div>
-            {/*<StorageUnitAccess*/}
-            {/*    unit={accessDialogUnit}*/}
-            {/*    isOpen={!!accessDialogUnit}*/}
-            {/*    onClose={() => setAccessDialogUnit(null)}*/}
-            {/*/>*/}
+            {accessDialogUnit && (
+                <StorageUnitAccess
+                    unit={accessDialogUnit}
+                    isOpen={!!accessDialogUnit}
+                    onClose={handleCloseAccessDialog}
+                    onUnlock={handleUnitUnlock}
+                />
+            )}
         </div>
     )
 }
