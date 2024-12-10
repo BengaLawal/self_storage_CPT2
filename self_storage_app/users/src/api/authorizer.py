@@ -24,6 +24,11 @@ def validate_token(token, region):
         keys = json.loads(response.decode('utf-8'))['keys']
         is_cold_start = False
 
+        # Remove the "Bearer " prefix if it exists
+    if token.startswith("Bearer "):
+        token = token[7:]  # Remove 'Bearer ' (7 characters)
+
+
     # get the kid from the headers prior to verification
     headers = jwt.get_unverified_headers(token)
     kid = headers['kid']
